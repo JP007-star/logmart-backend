@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const authenticationRoutes = require('./src/routes/auth');
 const adminRoutes = require('./src/routes/admin/auth');
+const productRoutes = require('./src/routes/productRoutes');
 
 const authenticationMiddleware = require('./src/middleware/index');
 const cors = require('cors');
@@ -48,8 +49,7 @@ const logResponse = (req, res, next) => {
     next(); // Pass control to the next middleware or route handler
 };
 
-// Apply the middleware globally to log all requests and responses
-app.use(express.json()); // This middleware must come before logRequest and logResponse to parse request bodies
+app.use(express.json()); 
 app.use(logRequest);
 app.use(logResponse);
 app.use("/public", express.static(path.join(__dirname, "src/uploads")));
@@ -57,6 +57,7 @@ app.use("/public", express.static(path.join(__dirname, "src/uploads")));
 
 app.use('/api/v1', authenticationRoutes);
 app.use('/api/v1', adminRoutes);
+app.use('/api', productRoutes);
 
 
 module.exports = app;
