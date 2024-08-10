@@ -53,7 +53,10 @@ async function createOrder(req, res) {
 async function getAllOrders(req, res) {
   try {
     const orders = await Order.find();
-    res.json(orders);
+    return res.status(200).json({
+      orders,
+      message: 'All orders retrieved successfully'
+  });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

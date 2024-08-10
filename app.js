@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const authenticationRoutes = require('./src/routes/auth');
 const adminRoutes = require('./src/routes/admin/auth');
 const productRoutes = require('./src/routes/productRoutes');
+const orderRoutes = require('./src/routes/orderRoutes');
 
 const authenticationMiddleware = require('./src/middleware/index');
 const cors = require('cors');
@@ -57,7 +58,8 @@ app.use("/public", express.static(path.join(__dirname, "src/uploads")));
 
 app.use('/api/v1', authenticationRoutes);
 app.use('/api/v1', adminRoutes);
-app.use('/api', productRoutes);
+app.use('/api/v1', productRoutes);
+app.use('/api/v1', orderRoutes);
 
 
 module.exports = app;
