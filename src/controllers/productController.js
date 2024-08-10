@@ -5,7 +5,10 @@ const productController = {
   getAllProducts: async (req, res) => {
     try {
       const products = await Product.find();
-      res.status(200).json(products);
+      return res.status(200).json({
+        products,
+        message: 'All products retrieved successfully'
+    });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Internal server error' });
