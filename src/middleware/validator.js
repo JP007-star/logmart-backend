@@ -1,6 +1,4 @@
 // middleware/validation.js
-
-// Validation middleware to ensure the request body contains necessary fields
 function validateCartRequest(req, res, next) {
     const { quantity } = req.body;
   
