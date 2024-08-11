@@ -15,7 +15,7 @@ router.post('/cart/add-cart/:userId', cartController.addToCart);
 router.put('/cart/:userId/update/:productId', validateCartRequest, cartController.updateCartItem);
 
 // Clear the entire cart
-router.delete('/cart-delete/:userId', cartController.clearCart);
+router.delete('/cart/:userId', cartController.clearCart);
 
 // Delete a specific item from the cart
 router.delete('/cart/:userId/item/:productId', cartController.deleteCartItem);
