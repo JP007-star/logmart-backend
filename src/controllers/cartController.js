@@ -117,27 +117,39 @@ async function deleteCartItem(req, res) {
   const { userId, productId } = req.params;
 
   try {
+    // Find the cart for the user
     const cart = await Cart.findOne({ userId });
 
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
+    // Filter out the item to be deleted
     const updatedItems = cart.items.filter(item => item.productId !== productId);
 
+    if (updatedItems.length === cart.items.length) {
+      // If the length hasn't changed, the product was not found in the cart
+      return res.status(404).json({ message: 'Product not found in cart' });
+    }
+
     if (updatedItems.length === 0) {
+      // If all items were deleted, remove the cart
       await Cart.deleteOne({ userId });
       return res.json({ message: 'Cart is empty and has been deleted' });
     }
 
+    // Otherwise, save the updated cart
     cart.items = updatedItems;
     await cart.save();
 
     res.json({ message: 'Item deleted from cart', cart });
   } catch (error) {
+    console.error('Error deleting item from cart:', error.message);
     res.status(500).json({ message: 'Error deleting item from cart', error: error.message });
   }
 }
+
+
 
 module.exports = {
   getUserCart,
