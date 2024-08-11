@@ -6,7 +6,7 @@ const cartController = require('../controllers/cartController');
 const { validateCartRequest } = require('../middleware/validator');
 
 // Get user's cart
-router.get('/:userId', cartController.getUserCart);
+router.get('/cart/:userId', cartController.getUserCart);
 
 // Add items to the cart
 router.post('/:userId/add', validateCartRequest, cartController.addToCart);
