@@ -17,29 +17,68 @@ async function getUserCart(req, res) {
 // Add items to the cart
 async function addToCart(req, res) {
   const userId = req.params.userId;
-  const { productId, quantity } = req.body;
+  const items = req.body.items; // Expecting an array of items
+
+  // Validate the request body
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: "Items array is required." });
+  }
 
   try {
+    // Find the existing cart for the user
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
-      cart = new Cart({ userId, items: [{ productId, quantity }] });
+      // Create a new cart if none exists
+      cart = new Cart({ userId, items });
     } else {
-      const existingItem = cart.items.find((item) => item.productId === productId);
+      // Process each item from the request
+      for (const item of items) {
+        const { productId, quantity, price, productName, discount, image } = item;
 
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        cart.items.push({ productId, quantity });
+        if (!productId || quantity == null) {
+          return res.status(400).json({ message: "productId and quantity are required for each item." });
+        }
+
+        // Find if the item already exists in the cart
+        const existingItemIndex = cart.items.findIndex(cartItem => cartItem.productId === productId);
+
+        if (existingItemIndex !== -1) {
+          // Update the quantity of the existing item
+          cart.items[existingItemIndex].quantity += quantity;
+          // Optionally update other fields if necessary
+          cart.items[existingItemIndex].price = price;
+          cart.items[existingItemIndex].productName = productName;
+          cart.items[existingItemIndex].discount = discount;
+          cart.items[existingItemIndex].image = image;
+        } else {
+          // Add a new item if it doesn't already exist
+          cart.items.push({ productId, quantity, price, productName, discount, image });
+        }
       }
     }
 
+    // Remove duplicate items by consolidating quantities
+    cart.items = cart.items.reduce((acc, current) => {
+      const existingItem = acc.find(item => item.productId === current.productId);
+      if (existingItem) {
+        existingItem.quantity += current.quantity;
+      } else {
+        acc.push(current);
+      }
+      return acc;
+    }, []);
+
+    // Save the updated cart
     await cart.save();
-    res.status(201).json(cart);
+    res.status(200).json(cart);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
+
+
+
 
 // Update item quantity in the cart
 async function updateCartItem(req, res) {
