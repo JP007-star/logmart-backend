@@ -12,9 +12,12 @@ router.get('/cart/:userId', cartController.getUserCart);
 router.post('/cart/add-cart/:userId', cartController.addToCart);
 
 // Update item quantity in the cart
-router.put('/:userId/update/:productId', validateCartRequest, cartController.updateCartItem);
+router.put('/cart/:userId/update/:productId', validateCartRequest, cartController.updateCartItem);
 
 // Clear the entire cart
-router.delete('/:userId/clear', cartController.clearCart);
+router.delete('/cart-delete/:userId', cartController.clearCart);
+
+// Delete a specific item from the cart
+router.delete('/cart/:userId/item/:productId', cartController.deleteCartItem);
 
 module.exports = router;
