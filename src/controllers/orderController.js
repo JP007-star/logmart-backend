@@ -1,7 +1,4 @@
-// controllers/orderController.js
-
 const Order = require('../models/Order');
-const Cart = require('../models/Cart');
 
 // Function to update the user's cart
 async function updateCart(userId, products) {
@@ -30,17 +27,22 @@ async function updateCart(userId, products) {
     console.error('Error updating cart:', error.message);
   }
 }
-
-// Create a new order
 async function createOrder(req, res) {
-  const { userId, products, totalAmount } = req.body;
+  const { userId, user, products, shippingAddress, totalAmount } = req.body;
 
   try {
-    // Save the order
-    const order = new Order({ userId, products, totalAmount });
+    // Create and save the order with the additional fields
+    const order = new Order({
+      userId,
+      user,                // Adding user information
+      products,            // Products array with detailed product info
+      shippingAddress,     // Adding shipping address
+      totalAmount,
+    });
+
     const newOrder = await order.save();
 
-    // Update the cart
+    // Update the cart with the new products
     await updateCart(userId, products);
 
     res.status(201).json(newOrder);
@@ -55,8 +57,8 @@ async function getAllOrders(req, res) {
     const orders = await Order.find();
     return res.status(200).json({
       orders,
-      message: 'All orders retrieved successfully'
-  });
+      message: 'All orders retrieved successfully',
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
