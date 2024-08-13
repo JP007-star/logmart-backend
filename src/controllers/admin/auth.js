@@ -42,7 +42,7 @@ exports.signin = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
 
-        if (!user || !(await user.authenticate(req.body.password)) || user.role !== 'admin') {
+        if (!user || !(await user.authenticate(req.body.password))) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 

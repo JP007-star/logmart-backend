@@ -53,8 +53,7 @@ exports.signin = async (req, res) => {
 
     if (
       !user ||
-      !user.authenticate(req.body.password) ||
-      user.role !== "user"
+      !user.authenticate(req.body.password) 
     ) {
       return res.status(400).json({
         message: "Invalid credentials || Something went wrong",
