@@ -1,3 +1,4 @@
+// models/Product.js
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -25,6 +26,14 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  discount: {
+    type: Number,
+    default: 0
+  },
+  status: {
+    type: String,
+    required: true
+  },
   rating: {
     rate: {
       type: Number,
@@ -34,6 +43,9 @@ const productSchema = new mongoose.Schema({
       type: Number,
       default: 0
     }
+  },
+  qrCode: {
+    type: String
   }
 });
 
