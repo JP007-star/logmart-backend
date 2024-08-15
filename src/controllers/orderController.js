@@ -1,37 +1,31 @@
+const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const Order = require('../models/Order');
 
-// Function to update the user's cart
-async function updateCart(userId, products) {
-  try {
-    let cart = await Cart.findOne({ userId });
-
-    if (!cart) {
-      // If the user doesn't have a cart, create a new one
-      cart = new Cart({ userId, items: products });
-    } else {
-      // Update the existing cart
-      products.forEach((product) => {
-        const existingItem = cart.items.find((item) => item.productId === product.productId);
-
-        if (existingItem) {
-          existingItem.quantity += product.quantity;
-        } else {
-          cart.items.push(product);
-        }
-      });
-    }
-
-    // Save the updated cart
-    await cart.save();
-  } catch (error) {
-    console.error('Error updating cart:', error.message);
-  }
-}
+// Create order and reduce stock quantities
 async function createOrder(req, res) {
   const { userId, user, products, shippingAddress, totalAmount } = req.body;
 
   try {
-    // Create and save the order with the additional fields
+    // Check and update stock quantities
+    for (const product of products) {
+      const { productId, quantity } = product;
+      const dbProduct = await Product.findById(productId);
+
+      if (!dbProduct) {
+        return res.status(404).json({ message: `Product with ID ${productId} not found` });
+      }
+
+      if (dbProduct.quantity < quantity) {
+        return res.status(400).json({ message: `Insufficient stock for product with ID ${productId}` });
+      }
+
+      // Reduce the product quantity in stock
+      dbProduct.quantity -= quantity;
+      await dbProduct.save();
+    }
+
+    // Create and save the order
     const order = new Order({
       userId,
       user,                // Adding user information
@@ -42,11 +36,12 @@ async function createOrder(req, res) {
 
     const newOrder = await order.save();
 
-    // Update the cart with the new products
-    await updateCart(userId, products);
+    // Optionally, clear the cart after placing an order
+    await Cart.findOneAndDelete({ userId });
 
     res.status(201).json(newOrder);
   } catch (error) {
+    console.error('Error creating order:', error.message);
     res.status(400).json({ message: error.message });
   }
 }
@@ -60,6 +55,7 @@ async function getAllOrders(req, res) {
       message: 'All orders retrieved successfully',
     });
   } catch (error) {
+    console.error('Error retrieving orders:', error.message);
     res.status(500).json({ message: error.message });
   }
 }
