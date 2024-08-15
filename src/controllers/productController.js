@@ -23,6 +23,7 @@ const productController = {
                 font-family: Arial, sans-serif;
                 margin: 0;
                 padding: 0;
+                font-size: 10px; /* Reduced font size for the entire document */
               }
               table {
                 width: 100%;
@@ -30,20 +31,21 @@ const productController = {
               }
               th, td {
                 border: 1px solid black;
-                padding: 2px;
+                padding: 1px; /* Adjusted padding for reduced font size */
                 text-align: left;
+                font-size: 9px; /* Reduced font size for table content */
               }
               th {
                 background-color: #f2f2f2;
               }
               .qr-code {
-                width: 150px; /* Adjusted for smaller size */
-                height: 150px;
+                width: 150px; /* Adjusted size for QR code image */
+                height: 15px;
               }
             </style>
           </head>
           <body>
-            <h1>Product List</h1>
+            <h1 style="font-size: 12px;">Product List</h1> <!-- Adjusted font size for heading -->
             <table>
               <thead>
                 <tr>
@@ -57,10 +59,9 @@ const productController = {
               </thead>
               <tbody>
       `;
-      var i=1;
+      var i = 1;
       for (const product of products) {
-        // Assume convertToDataUrl has compression functionality
-        const qrCodeDataUrl = await convertToDataUrl(product.qrCode, {quality: 0.5});
+        const qrCodeDataUrl = await convertToDataUrl(product.qrCode, { quality: 0.5 });
   
         htmlContent += `
           <tr>
@@ -85,8 +86,9 @@ const productController = {
       const pdfOptions = {
         format: 'A4',
         orientation: 'portrait',
-        border: '8mm',
-        type: 'pdf', // Ensure the output type is PDF
+        border: '10mm',
+        type: 'pdf',
+        quality: '75'
       };
   
       htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
@@ -106,6 +108,7 @@ const productController = {
       res.status(500).json({ message: 'Failed to generate PDF' });
     }
   },
+  
   
   
   
