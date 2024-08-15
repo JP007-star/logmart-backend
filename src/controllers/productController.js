@@ -39,8 +39,8 @@ const productController = {
                   background-color: #f2f2f2;
                 }
                 .qr-code {
-                  width: 200px;
-                  height: 200px;
+                  width: 150px;
+                  height: 150px;
                 }
               </style>
             </head>
