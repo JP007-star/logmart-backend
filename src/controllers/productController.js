@@ -40,7 +40,7 @@ const productController = {
               }
               .qr-code {
                 width: 150px; /* Adjusted size for QR code image */
-                height: 15px;
+                height: 150px;
               }
             </style>
           </head>
