@@ -11,105 +11,100 @@ const { convertToDataUrl } = require('../utils/convertToDataUrl'); // Utility to
 
 
 const productController = {
-    generatePdfForAllProducts: async (req, res) => {
-      try {
-        // Fetch all products from the database
-        const products = await Product.find();
+  generatePdfForAllProducts: async (req, res) => {
+    try {
+      const products = await Product.find();
   
-        // Start building the HTML content
-        let htmlContent = `
-          <html>
-            <head>
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  margin: 0;
-                  padding: 0;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                th, td {
-                  border: 1px solid black;
-                  padding: 2px;
-                  text-align: left;
-                }
-                th {
-                  background-color: #f2f2f2;
-                }
-                .qr-code {
-                  width: 150px;
-                  height: 150px;
-                }
-              </style>
-            </head>
-            <body>
-              <h1>Product List</h1>
-              <table>
-                <thead>
-                  <tr>
-                     <th>SL No</th>
-                    <th>Title</th>
-                    <th>Price</th>
-                    <th>Category</th>
-                    <th>Quantity</th>
-                    <th>QR Code</th>
-                  </tr>
-                </thead>
-                <tbody>
-        `;
-        var i=1;
-        for (const product of products) {
-          const qrCodeDataUrl = await convertToDataUrl(product.qrCode);
-  
-          htmlContent += `
-            <tr>
-            <td>${i}</td>
-              <td>${product.title}</td>
-              <td>$${product.price}</td>
-              <td>${product.category}</td>
-              <td>${product.quantity}</td>
-              <td><img src="${qrCodeDataUrl}" class="qr-code" /></td>
-            </tr>
-          `;
-          i++;
-        }
+      let htmlContent = `
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              th, td {
+                border: 1px solid black;
+                padding: 5px; /* Adjusted for better spacing */
+                text-align: left;
+              }
+              th {
+                background-color: #f2f2f2;
+              }
+              .qr-code {
+                width: 100px; /* Adjusted for better fit */
+                height: 100px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Product List</h1>
+            <table>
+              <thead>
+                <tr>
+                   <th>SL No</th>
+                  <th>Title</th>
+                  <th>Price</th>
+                  <th>Category</th>
+                  <th>Quantity</th>
+                  <th>QR Code</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      var i=1;
+      for (const product of products) {
+        const qrCodeDataUrl = await convertToDataUrl(product.qrCode);
   
         htmlContent += `
-              </tbody>
-            </table>
-          </body>
-        </html>
+          <tr>
+            <td>${i}</td>
+            <td>${product.title}</td>
+            <td>$${product.price}</td>
+            <td>${product.category}</td>
+            <td>${product.quantity}</td>
+            <td><img src="${qrCodeDataUrl}" class="qr-code" /></td>
+          </tr>
         `;
-  
-        // Define PDF options
-        const pdfOptions = {
-          format: 'A4',
-          orientation: 'portrait',
-          border: '10mm'
-        };
-  
-        // Generate PDF
-        htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
-          if (err) {
-            console.error('Error generating PDF:', err);
-            return res.status(500).json({ message: 'Failed to generate PDF' });
-          }
-  
-          // Set headers to indicate PDF content
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', 'attachment; filename=products.pdf');
-  
-          // Send the PDF as a binary response
-          res.send(buffer);
-        });
-  
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        res.status(500).json({ message: 'Failed to generate PDF' });
+        i++;
       }
-    },
+  
+      htmlContent += `
+            </tbody>
+          </table>
+        </body>
+      </html>
+      `;
+  
+      const pdfOptions = {
+        format: 'A4',
+        orientation: 'portrait',
+        border: '10mm'
+      };
+  
+      htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
+        if (err) {
+          console.error('Error generating PDF:', err);
+          return res.status(500).json({ message: 'Failed to generate PDF' });
+        }
+  
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=products.pdf');
+  
+        res.send(buffer);
+      });
+  
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      res.status(500).json({ message: 'Failed to generate PDF' });
+    }
+  },
+  
   
 
   // Retrieve all products
