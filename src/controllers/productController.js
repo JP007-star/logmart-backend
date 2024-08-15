@@ -32,7 +32,7 @@ const productController = {
                 }
                 th, td {
                   border: 1px solid black;
-                  padding: 8px;
+                  padding: 4px;
                   text-align: left;
                 }
                 th {
