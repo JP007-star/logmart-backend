@@ -30,15 +30,15 @@ const productController = {
               }
               th, td {
                 border: 1px solid black;
-                padding: 5px; /* Adjusted for better spacing */
+                padding: 2px;
                 text-align: left;
               }
               th {
                 background-color: #f2f2f2;
               }
               .qr-code {
-                width: 100px; /* Adjusted for better fit */
-                height: 100px;
+                width: 150px; /* Adjusted for smaller size */
+                height: 150px;
               }
             </style>
           </head>
@@ -47,7 +47,7 @@ const productController = {
             <table>
               <thead>
                 <tr>
-                   <th>SL No</th>
+                  <th>SL No</th>
                   <th>Title</th>
                   <th>Price</th>
                   <th>Category</th>
@@ -59,7 +59,8 @@ const productController = {
       `;
       var i=1;
       for (const product of products) {
-        const qrCodeDataUrl = await convertToDataUrl(product.qrCode);
+        // Assume convertToDataUrl has compression functionality
+        const qrCodeDataUrl = await convertToDataUrl(product.qrCode, {quality: 0.5});
   
         htmlContent += `
           <tr>
@@ -84,7 +85,8 @@ const productController = {
       const pdfOptions = {
         format: 'A4',
         orientation: 'portrait',
-        border: '10mm'
+        border: '8mm',
+        type: 'pdf', // Ensure the output type is PDF
       };
   
       htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
@@ -104,6 +106,7 @@ const productController = {
       res.status(500).json({ message: 'Failed to generate PDF' });
     }
   },
+  
   
   
 
