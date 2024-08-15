@@ -14,6 +14,7 @@ router.post('/products', productController.createProduct);
 
 // Update a product by ID
 router.put('/products/:id', productController.updateProductById);
+router.get('/generate-pdf', productController.generatePdfForAllProducts);
 
 // Delete a product by ID
 router.delete('/products/:id', productController.deleteProductById);
