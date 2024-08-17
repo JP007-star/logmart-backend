@@ -21,7 +21,6 @@ async function createOrder(req, res) {
       }
 
       // Reduce the product quantity in stock
-      dbProduct.quantity -= quantity;
       await dbProduct.save();
     }
 

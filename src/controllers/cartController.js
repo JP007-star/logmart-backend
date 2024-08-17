@@ -32,6 +32,19 @@ async function addToCart(req, res) {
         return res.status(400).json({ message: "productId and quantity are required for each item." });
       }
 
+      // Find the product and check stock
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      if (product.quantity < quantity) {
+        return res.status(400).json({ message: 'Insufficient stock for product' });
+      }
+
+      // Update product stock
+      product.quantity -= quantity;
+      await product.save();
+
       // Find if the item already exists in the cart
       const existingItem = cart.items.find(cartItem => cartItem.productId === productId);
 
@@ -48,6 +61,7 @@ async function addToCart(req, res) {
     res.status(500).json({ message: 'Error adding to cart', error: error.message });
   }
 }
+
 
 // Update item quantity in the cart
 async function updateCartItem(req, res) {
@@ -94,42 +108,60 @@ async function updateCartItem(req, res) {
 }
 
 
-async function updateCartQuantity(req, res)  {
+async function updateCartQuantity(req, res) {
   const { userId, productId } = req.params;
   const { quantityChange } = req.body;
 
   try {
-      // Find the cart for the given user
-      const cart = await Cart.findOne({ userId });
+    // Find the cart for the given user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found' });
+    }
 
-      if (!cart) {
-          return res.status(404).json({ message: 'Cart not found' });
-      }
+    // Find the item in the cart
+    const item = cart.items.find(i => i.productId === productId);
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found in cart' });
+    }
 
-      // Find the item in the cart
-      const item = cart.items.find(i => i.productId === productId);
+    // Calculate the new quantity for the item in the cart
+    const newQuantity = item.quantity + quantityChange;
 
-      if (!item) {
-          return res.status(404).json({ message: 'Item not found in cart' });
-      }
+    // Prevent the quantity from being less than 1
+    if (newQuantity < 1) {
+      return res.status(400).json({ message: 'Quantity must be at least 1' });
+    }
 
-      // Update the quantity
-      item.quantity += quantityChange;
+    // Update the quantity in the cart
+    item.quantity = newQuantity;
 
-      // Prevent the quantity from being less than 1
-      if (item.quantity < 1) {
-          return res.status(400).json({ message: 'Quantity must be at least 1' });
-      }
+    // Find the product and update stock
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
-      // Save the updated cart
-      await cart.save();
+    // Calculate the stock change based on quantityChange
+    const stockChange = quantityChange;
 
-      // Respond with the updated cart
-      res.status(200).json(cart);
+    // Update the product's stock
+    if (product.quantity - stockChange < 0) {
+      return res.status(400).json({ message: 'Insufficient stock for product' });
+    }
+    product.quantity -= stockChange;
+    await product.save();
+
+    // Save the updated cart
+    await cart.save();
+
+    // Respond with the updated cart
+    res.status(200).json(cart);
   } catch (error) {
-      res.status(500).json({ message: 'An error occurred while updating the cart', error });
+    res.status(500).json({ message: 'An error occurred while updating the cart', error: error.message });
   }
-};
+}
+
 
 // Clear the entire cart and restore stock
 async function clearCart(req, res) {
