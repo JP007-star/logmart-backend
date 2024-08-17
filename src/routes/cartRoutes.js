@@ -14,6 +14,9 @@ router.post('/cart/add-cart/:userId', cartController.addToCart);
 // Update item quantity in the cart
 router.put('/cart/:userId/update/:productId', validateCartRequest, cartController.updateCartItem);
 
+
+router.put('/cart/:userId/item/:productId', cartController.updateCartQuantity);
+
 // Clear the entire cart
 router.delete('/cart/:userId', cartController.clearCart);
 

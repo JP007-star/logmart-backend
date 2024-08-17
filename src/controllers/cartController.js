@@ -93,6 +93,44 @@ async function updateCartItem(req, res) {
   }
 }
 
+
+async function updateCartQuantity(req, res)  {
+  const { userId, productId } = req.params;
+  const { quantityChange } = req.body;
+
+  try {
+      // Find the cart for the given user
+      const cart = await Cart.findOne({ userId });
+
+      if (!cart) {
+          return res.status(404).json({ message: 'Cart not found' });
+      }
+
+      // Find the item in the cart
+      const item = cart.items.find(i => i.productId === productId);
+
+      if (!item) {
+          return res.status(404).json({ message: 'Item not found in cart' });
+      }
+
+      // Update the quantity
+      item.quantity += quantityChange;
+
+      // Prevent the quantity from being less than 1
+      if (item.quantity < 1) {
+          return res.status(400).json({ message: 'Quantity must be at least 1' });
+      }
+
+      // Save the updated cart
+      await cart.save();
+
+      // Respond with the updated cart
+      res.status(200).json(cart);
+  } catch (error) {
+      res.status(500).json({ message: 'An error occurred while updating the cart', error });
+  }
+};
+
 // Clear the entire cart and restore stock
 async function clearCart(req, res) {
   const { userId } = req.params;
@@ -166,6 +204,7 @@ module.exports = {
   getUserCart,
   addToCart,
   updateCartItem,
+  updateCartQuantity,
   clearCart,
   deleteCartItem
 };
