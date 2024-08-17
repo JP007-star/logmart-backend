@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Invoice</title>
+  <style>
+    @page {
+      margin: 10mm;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #333;
+      position: relative;
+      min-height: 100vh;
+      padding-bottom: 100px; /* Add space for the footer */
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    h2 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    p {
+      margin: 5px 0;
+    }
+    .invoice-details, .shipping-address {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+    }
+    .invoice-details {
+      border-bottom: 2px solid #4CAF50;
+    }
+    .shipping-address {
+      border-bottom: 2px solid #FFC107;
+    }
+    .invoice-details table, .shipping-address table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .invoice-details th, .shipping-address th, .invoice-details td, .shipping-address td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    .invoice-details th, .shipping-address th {
+      background-color: #f4f4f4;
+      color: #000;
+    }
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .products-table th, .products-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    .products-table th {
+      background-color: #f4f4f4;
+      color: #000;
+    }
+    .total-amount {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .footer {
+      width: 100%;
+      background-color: #f1f1f1;
+      text-align: center;
+      font-size: 12px;
+      border-top: 2px solid #333;
+      padding: 15px 0;
+      position: absolute;
+      bottom: 0;
+    }
+    .logo {
+      width: 150px; /* Adjust size as needed */
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://logmart.netlify.app/images/logo.png" class="logo" alt="LogMart Logo">
+
+    <h1>Invoice</h1>
+
+    <div class="invoice-details">
+      <h2>Order Details</h2>
+      <table>
+        <tr>
+          <th>Order Number</th>
+          <td>{{orderNumber}}</td>
+        </tr>
+        <tr>
+          <th>Customer Name</th>
+          <td>{{customerName}}</td>
+        </tr>
+        <tr>
+          <th>Order Date</th>
+          <td>{{orderDate}}</td>
+        </tr>
+        <tr>
+          <th>Status</th>
+          <td>{{status}}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="shipping-address">
+      <h2>Shipping Address</h2>
+      <table>
+        <tr>
+          <th>Street</th>
+          <td>{{shippingAddress.street}}</td>
+        </tr>
+        <tr>
+          <th>City</th>
+          <td>{{shippingAddress.city}}</td>
+        </tr>
+        <tr>
+          <th>State</th>
+          <td>{{shippingAddress.state}}</td>
+        </tr>
+        <tr>
+          <th>Country</th>
+          <td>{{shippingAddress.country}}</td>
+        </tr>
+        <tr>
+          <th>Postal Code</th>
+          <td>{{shippingAddress.postalCode}}</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>Products</h2>
+    <table class="products-table">
+      <thead>
+        <tr>
+          <th>Product Name</th>
+          <th>Quantity</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{productsTable}}
+      </tbody>
+    </table>
+
+    <p class="total-amount">Total Amount: ₹{{totalAmount}}</p>
+  </div>
+
+  <div class="footer">
+    <p>Thank you for your business!</p>
+    <p>For any inquiries, please contact us at: support@logmart.com</p>
+    <p>Address: 1234 LogMart Street, Business City, BC 12345</p>
+  </div>
+</body>
+</html>
