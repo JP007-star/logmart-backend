@@ -7,35 +7,29 @@ const path = require('path');
 
 exports.signup = async (req, res, next) => {
   try {
+    // Check if the user already exists
     const existingUser = await User.findOne({ email: req.body.email }).exec();
-
     if (existingUser) {
       return res.status(400).json({
         message: "User already exists",
       });
     }
 
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, profilePicture } = req.body;
     const hash_password = await bcrypt.hash(password, 10);
 
-    let profilePicture = null;
-    if (req.file) {
-        const filePath = req.file.path;
-        const relativePath = filePath.split('/uploads')[1]; // Extract path relative to /uploads directory
-        profilePicture = `/public${relativePath}`;
-    }
-   
-
-    const _user = new User({
+    // Create a new user
+    const newUser = new User({
       firstName,
       lastName,
       email,
       hash_password,
-      profilePicture,
+      profilePicture, // Use the URL directly from the request
       username: shortid.generate(),
     });
 
-    const savedUser = await _user.save();
+    // Save the user to the database
+    const savedUser = await newUser.save();
 
     return res.status(201).json({
       user: savedUser,
