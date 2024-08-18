@@ -46,6 +46,14 @@ const productSchema = new mongoose.Schema({
   },
   qrCode: {
     type: String
+  },
+  sgst: {  // State Goods and Services Tax
+    type: Number,
+    default: 0
+  },
+  cgst: {  // Central Goods and Services Tax
+    type: Number,
+    default: 0
   }
 });
 

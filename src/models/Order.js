@@ -13,10 +13,13 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true }, 
   price: { type: Number, required: true }, 
   quantity: { type: Number, required: true },
+  sgst: { type: Number, default: 0 },  // SGST for the product
+  cgst: { type: Number, default: 0 },  // CGST for the product
+  discount: { type: Number, default: 0 }, // Discount percentage for the product
 });
 
 const orderSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   user: {
     name: { type: String, required: true },  
     email: { type: String, required: true }, 
@@ -24,8 +27,34 @@ const orderSchema = new mongoose.Schema({
   products: [productSchema],
   shippingAddress: addressSchema,
   totalAmount: { type: Number, required: true },
+  totalSGST: { type: Number, default: 0 },  // Total SGST for the order
+  totalCGST: { type: Number, default: 0 },  // Total CGST for the order
+  totalDiscount: { type: Number, default: 0 }, // Total discount for the order
+  paymentMode: { type: String, default: 'Cash On Delivery', required: true },
   orderDate: { type: Date, default: Date.now },
   status: { type: String, default: 'Pending' },
+});
+
+// Calculate total SGST, CGST, and Discount for the order before saving
+orderSchema.pre('save', function(next) {
+  if (this.products.length > 0) {
+    this.totalSGST = this.products.reduce((total, product) => total + (product.sgst * product.quantity), 0);
+    this.totalCGST = this.products.reduce((total, product) => total + (product.cgst * product.quantity), 0);
+
+    // Calculate the total discount
+    this.totalDiscount = this.products.reduce((total, product) => {
+      const discountAmount = (product.price * product.quantity) * (product.discount / 100);
+      return total + discountAmount;
+    }, 0);
+
+    // Calculate the total amount after applying discounts
+    const totalBeforeDiscount = this.products.reduce((total, product) => {
+      return total + (product.price * product.quantity);
+    }, 0);
+
+    this.totalAmount = totalBeforeDiscount - this.totalDiscount + this.totalSGST + this.totalCGST;
+  }
+  next();
 });
 
 const Order = mongoose.model('Order', orderSchema);

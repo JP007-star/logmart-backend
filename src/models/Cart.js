@@ -23,10 +23,19 @@ const cartSchema = new mongoose.Schema({
         type: Number 
       },
       discount: { 
-        type: String 
+        type: Number, // Assuming discount is a percentage
+        default: 0 
       },
       image: { 
         type: String 
+      },
+      sgst: { 
+        type: Number, 
+        default: 0  // State Goods and Services Tax
+      },
+      cgst: { 
+        type: Number, 
+        default: 0  // Central Goods and Services Tax
       }
     }
   ],

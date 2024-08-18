@@ -6,7 +6,7 @@ async function getUserCart(req, res) {
   const userId = req.params.userId;
 
   try {
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate('items.productId');
     res.json(cart || { items: [] });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching cart', error: error.message });
@@ -16,7 +16,7 @@ async function getUserCart(req, res) {
 // Add items to the cart and reduce product quantity in stock
 async function addToCart(req, res) {
   const userId = req.params.userId;
-  const items = req.body.items; // Expecting an array of items
+  const items = req.body.items;
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Items array is required." });
@@ -26,7 +26,7 @@ async function addToCart(req, res) {
     let cart = await Cart.findOne({ userId }) || new Cart({ userId, items: [] });
 
     for (const item of items) {
-      const { productId, quantity, price, productName, discount, image } = item;
+      const { productId, quantity, price, productName, discount, image, sgst, cgst } = item;
 
       if (!productId || quantity == null) {
         return res.status(400).json({ message: "productId and quantity are required for each item." });
@@ -45,13 +45,19 @@ async function addToCart(req, res) {
       product.quantity -= quantity;
       await product.save();
 
+      // Convert discount to a number if it's a string
+      const numericDiscount = typeof discount === 'string' ? parseFloat(discount.replace('%', '')) : discount || 0;
+
       // Find if the item already exists in the cart
-      const existingItem = cart.items.find(cartItem => cartItem.productId === productId);
+      const existingItem = cart.items.find(cartItem => cartItem.productId.toString() === productId.toString());
 
       if (existingItem) {
         existingItem.quantity += quantity;
+        existingItem.sgst = sgst;
+        existingItem.cgst = cgst;
+        existingItem.discount = numericDiscount;
       } else {
-        cart.items.push({ productId, quantity, price, productName, discount, image });
+        cart.items.push({ productId, quantity, price, productName, discount: numericDiscount, image, sgst, cgst });
       }
     }
 
@@ -61,7 +67,6 @@ async function addToCart(req, res) {
     res.status(500).json({ message: 'Error adding to cart', error: error.message });
   }
 }
-
 
 // Update item quantity in the cart
 async function updateCartItem(req, res) {
@@ -75,7 +80,7 @@ async function updateCartItem(req, res) {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    const item = cart.items.find(item => item.productId === productId);
+    const item = cart.items.find(item => item.productId.toString() === productId.toString());
 
     if (!item) {
       return res.status(404).json({ message: 'Item not found in cart' });
@@ -107,7 +112,7 @@ async function updateCartItem(req, res) {
   }
 }
 
-
+// Update cart quantity with change in stock
 async function updateCartQuantity(req, res) {
   const { userId, productId } = req.params;
   const { quantityChange } = req.body;
@@ -120,7 +125,7 @@ async function updateCartQuantity(req, res) {
     }
 
     // Find the item in the cart
-    const item = cart.items.find(i => i.productId === productId);
+    const item = cart.items.find(i => i.productId.toString() === productId.toString());
     if (!item) {
       return res.status(404).json({ message: 'Item not found in cart' });
     }
@@ -162,7 +167,6 @@ async function updateCartQuantity(req, res) {
   }
 }
 
-
 // Clear the entire cart and restore stock
 async function clearCart(req, res) {
   const { userId } = req.params;
@@ -201,7 +205,7 @@ async function deleteCartItem(req, res) {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.productId === productId);
+    const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId.toString());
 
     if (itemIndex === -1) {
       return res.status(404).json({ message: 'Product not found in cart' });

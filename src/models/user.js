@@ -1,6 +1,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+// Define the address schema
+const addressSchema = new mongoose.Schema({
+  street: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  country: { type: String, required: true },
+  postalCode: { type: String, required: true },
+});
+
+// Define the user schema
 const userSchema = mongoose.Schema({
     firstName: {
         type: String,
@@ -46,7 +56,8 @@ const userSchema = mongoose.Schema({
     },
     profilePicture: {
         type: String // Assuming you'll store image URLs
-    }
+    },
+    address: addressSchema // Add the address schema here
 }, { timestamps: true });
 
 userSchema.virtual('fullName').get(function() {

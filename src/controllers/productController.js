@@ -110,9 +110,6 @@ const productController = {
   },
   
   
-  
-  
-
   // Retrieve all products
   getAllProducts: async (req, res) => {
     try {
@@ -144,10 +141,10 @@ const productController = {
   // Create a new product
   createProduct: async (req, res) => {
     try {
-      const { title, price, description, quantity, category, image, discount, status, rating = { rate: 0, count: 0 } } = req.body;
+      const { title, price, description, quantity, category, image, discount, status, rating = { rate: 0, count: 0 }, sgst = 0, cgst = 0 } = req.body;
 
       // Create a new product
-      const newProduct = new Product({ title, price, description, quantity, category, image, discount, status, rating });
+      const newProduct = new Product({ title, price, description, quantity, category, image, discount, status, rating, sgst, cgst });
       const savedProduct = await newProduct.save();
 
       // Ensure we have a valid product ID before proceeding
@@ -172,10 +169,10 @@ const productController = {
   // Update a product by ID
   updateProductById: async (req, res) => {
     try {
-      const { title, price, description, quantity, category, image, discount, status, rating } = req.body;
+      const { title, price, description, quantity, category, image, discount, status, rating, sgst, cgst } = req.body;
       const updatedProduct = await Product.findByIdAndUpdate(
         req.params.id,
-        { title, price, description, quantity, category, image, discount, status, rating },
+        { title, price, description, quantity, category, image, discount, status, rating, sgst, cgst },
         { new: true } // Return the updated document
       );
       if (!updatedProduct) {
@@ -202,5 +199,6 @@ const productController = {
     }
   },
 };
+
 
 module.exports = productController;

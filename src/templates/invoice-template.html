@@ -75,7 +75,7 @@
       background-color: #f4f4f4;
       color: #000;
     }
-    .total-amount {
+    .total-amount, .tax-amount, .discount-amount {
       font-weight: bold;
       font-size: 18px;
       margin-top: 20px;
@@ -157,6 +157,10 @@
           <th>Product Name</th>
           <th>Quantity</th>
           <th>Price</th>
+          <th>SGST</th>
+          <th>CGST</th>
+          <th>Discount</th>
+          <th>Sub Total</th>
         </tr>
       </thead>
       <tbody>
@@ -164,6 +168,10 @@
       </tbody>
     </table>
 
+    <p class="total-amount">Subtotal: ₹{{subtotal}}</p>
+    <p class="discount-amount">Total Discount: ₹{{discount}}</p>
+    <p class="tax-amount">SGST: ₹{{sgst}}</p>
+    <p class="tax-amount">CGST: ₹{{cgst}}</p>
     <p class="total-amount">Total Amount: ₹{{totalAmount}}</p>
   </div>
 
