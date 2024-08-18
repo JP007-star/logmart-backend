@@ -1,7 +1,7 @@
-const User = require('../../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
+const User = require('../../models/User');
 
 exports.signup = async (req, res, next) => {
     try {
