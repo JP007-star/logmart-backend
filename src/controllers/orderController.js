@@ -8,12 +8,12 @@ const htmlPdf = require('html-pdf');
 // Create order and reduce stock quantities
 async function createOrder(req, res) {
   const { userId, user, products, shippingAddress, paymentMode, status } = req.body;
-
+  let totalAmount = 0;
+  let totalDiscount = 0;
+  let totalSGST = 0;
+  let totalCGST = 0;
   try {
-    let totalAmount = 0;
-    let totalDiscount = 0;
-    let totalSGST = 0;
-    let totalCGST = 0;
+   
 
     // Check and update stock quantities
     for (const product of products) {
@@ -30,33 +30,39 @@ async function createOrder(req, res) {
 
       // Calculate total amount before discounts
       const productTotal = dbProduct.price * quantity;
+      console.log('Product Total:', productTotal);
 
       // Calculate discount
       const discountAmount = (productTotal * (dbProduct.discount || 0)) / 100;
       const discountedPrice = productTotal - discountAmount;
       totalDiscount += discountAmount;
+      console.log('Discount Amount:', discountAmount);
+      console.log('Discounted Price:', discountedPrice);
 
-      // Calculate taxes based on the original product total
-      const sgstAmount = (productTotal * dbProduct.sgst) / 100;
-      const cgstAmount = (productTotal * dbProduct.cgst) / 100;
+      // Calculate taxes based on discounted price
+      const sgstAmount = (discountedPrice * dbProduct.sgst) / 100;
+      const cgstAmount = (discountedPrice * dbProduct.cgst) / 100;
       totalSGST += sgstAmount;
       totalCGST += cgstAmount;
-
-      // Add discounted price plus taxes to total amount
       totalAmount += discountedPrice + sgstAmount + cgstAmount;
+      console.log('SGST Amount:', totalSGST);
+      console.log('CGST Amount:', totalCGST);
 
       // Update the product stock
-      dbProduct.quantity -= quantity;
       await dbProduct.save();
     }
+
+    // Calculate final amount
+    const finalAmount = totalAmount;
+    console.log('Final Amount:', finalAmount);
 
     // Create and save the order
     const order = new Order({
       userId,
-      user,
-      products,
-      shippingAddress,
-      totalAmount,
+      user,                // Adding user information
+      products,            // Products array with detailed product info
+      shippingAddress,     // Adding shipping address
+      totalAmount: finalAmount,
       totalDiscount,
       totalSGST,
       totalCGST,
@@ -64,6 +70,9 @@ async function createOrder(req, res) {
       status,
       orderDate: new Date().toISOString()
     });
+
+    // Log order object before saving
+    console.log('Order Object Before Save:', order);
 
     const newOrder = await order.save();
 
@@ -76,7 +85,6 @@ async function createOrder(req, res) {
     res.status(400).json({ message: error.message });
   }
 }
-
 
 
 
