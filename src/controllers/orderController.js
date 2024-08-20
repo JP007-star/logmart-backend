@@ -1,4 +1,5 @@
 const Cart = require('../models/Cart');
+const chromium = require('chrome-aws-lambda');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const path = require('path');
@@ -108,6 +109,8 @@ async function getAllOrders(req, res) {
 
 // Generate PDF invoice
 
+
+
 async function generateInvoicePdf(req, res) {
   const { orderId } = req.params;
 
@@ -207,7 +210,12 @@ async function generateInvoicePdf(req, res) {
     htmlContent = htmlContent.replace('{{productsTable}}', productsHtml);
 
     // Generate PDF with Puppeteer
-    const browser = await puppeteer.launch();
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: true,
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
@@ -222,6 +230,8 @@ async function generateInvoicePdf(req, res) {
     res.status(500).json({ message: 'Failed to generate PDF', error: error.message });
   }
 }
+
+
 
 
 
