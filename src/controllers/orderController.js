@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const path = require('path');
 const fs = require('fs');
-const htmlPdf = require('html-pdf');
+const puppeteer = require('puppeteer');
 
 // Create order and reduce stock quantities
 async function createOrder(req, res) {
@@ -107,6 +107,7 @@ async function getAllOrders(req, res) {
 }
 
 // Generate PDF invoice
+
 async function generateInvoicePdf(req, res) {
   const { orderId } = req.params;
 
@@ -205,30 +206,23 @@ async function generateInvoicePdf(req, res) {
     // Replace the placeholder with the products HTML
     htmlContent = htmlContent.replace('{{productsTable}}', productsHtml);
 
-    // Generate PDF
-    const pdfOptions = {
-      format: 'A4',
-      orientation: 'portrait',
-      border: '10mm',
-    };
+    // Generate PDF with Puppeteer
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(htmlContent);
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+    await browser.close();
 
-    htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
-      if (err) {
-        console.error('Error generating PDF:', err);
-        return res.status(500).json({ message: 'Failed to generate PDF', error: err.message });
-      }
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
-
-      res.send(buffer);
-    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Error generating PDF:', error.message);
     res.status(500).json({ message: 'Failed to generate PDF', error: error.message });
   }
 }
+
 
 
 
