@@ -1,36 +1,27 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const path = require('path');
-const cors = require('cors');
-const morgan = require('morgan');
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-
-// Import routes
 const authenticationRoutes = require('./src/routes/auth');
 const adminRoutes = require('./src/routes/admin/auth');
 const productRoutes = require('./src/routes/productRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 
-const app = express();
+const cors = require('cors');
+const path = require('path');
+const morgan = require('morgan');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-// CORS setup
 const corsOptions = {
     origin: '*',
     credentials: true, // Access-Control-Allow-Credentials:true
     optionSuccessStatus: 200,
 };
+
+const app = express();
+
 app.use(cors(corsOptions));
-
-// Middleware
 app.use(bodyParser.json());
-app.use(express.json());
-app.use(morgan('combined')); // Logging
 
-// Static files
-app.use("/public", express.static(path.join(__dirname, "src/uploads")));
-
-// Logging requests and responses
 const logRequest = (req, res, next) => {
     req.startTime = new Date(); // Store start time of the request
     req.logData = {
@@ -74,8 +65,12 @@ const logResponse = (req, res, next) => {
     next(); // Pass control to the next middleware or route handler
 };
 
+// Apply middleware
 app.use(logRequest);
 app.use(logResponse);
+
+app.use(express.json());
+app.use("/public", express.static(path.join(__dirname, "src/uploads")));
 
 // Define routes
 app.use('/api/v1', authenticationRoutes);
@@ -84,5 +79,4 @@ app.use('/api/v1', productRoutes);
 app.use('/api/v1', orderRoutes);
 app.use('/api/v1', cartRoutes);
 
-// Export the Express app for Vercel serverless function
 module.exports = app;

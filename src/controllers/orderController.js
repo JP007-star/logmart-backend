@@ -1,10 +1,9 @@
 const Cart = require('../models/Cart');
-const chromium = require('chrome-aws-lambda');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const path = require('path');
 const fs = require('fs');
-const puppeteer = require('puppeteer');
+const htmlPdf = require('html-pdf');
 
 // Create order and reduce stock quantities
 async function createOrder(req, res) {
@@ -108,9 +107,6 @@ async function getAllOrders(req, res) {
 }
 
 // Generate PDF invoice
-
-
-
 async function generateInvoicePdf(req, res) {
   const { orderId } = req.params;
 
@@ -209,30 +205,30 @@ async function generateInvoicePdf(req, res) {
     // Replace the placeholder with the products HTML
     htmlContent = htmlContent.replace('{{productsTable}}', productsHtml);
 
-    // Generate PDF with Puppeteer
-    const browser = await chromium.puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: true,
-    });
-    const page = await browser.newPage();
-    await page.setContent(htmlContent);
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-    await browser.close();
+    // Generate PDF
+    const pdfOptions = {
+      format: 'A4',
+      orientation: 'portrait',
+      border: '10mm',
+    };
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
-    res.send(pdfBuffer);
+    htmlPdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
+      if (err) {
+        console.error('Error generating PDF:', err);
+        return res.status(500).json({ message: 'Failed to generate PDF', error: err.message });
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
+
+      res.send(buffer);
+    });
 
   } catch (error) {
     console.error('Error generating PDF:', error.message);
     res.status(500).json({ message: 'Failed to generate PDF', error: error.message });
   }
 }
-
-
-
 
 
 
