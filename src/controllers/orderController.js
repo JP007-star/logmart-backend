@@ -113,8 +113,6 @@ async function generateInvoicePdf(req, res) {
   try {
     // Load the HTML template
     const templatePath = path.join(__dirname, '../templates/invoice-template.html');
-    console.log('Template Path:', templatePath);
-
     const htmlTemplate = fs.readFileSync(templatePath, 'utf8');
 
     // Fetch the order details
@@ -124,47 +122,52 @@ async function generateInvoicePdf(req, res) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Calculate the subtotal, SGST, CGST, and total discount
-    let subtotal = 0;
-    let totalSGST = 0;
-    let totalCGST = 0;
-
-    const products = order.products.map(p => {
-      const productTotal = p.price * p.quantity;
-      const productSGST = (productTotal * p.sgst) / 100;
-      const productCGST = (productTotal * p.cgst) / 100;
-
-      subtotal += productTotal;
-      totalSGST += productSGST;
-      totalCGST += productCGST;
-
-      return {
-        name: p.name,
-        quantity: p.quantity,
-        price: p.price.toFixed(2),
-        sgst: productSGST.toFixed(2),
-        cgst: productCGST.toFixed(2),
-        discount: (productTotal * (p.discount || 0) / 100).toFixed(2),
-        total: (productTotal + productSGST + productCGST - (productTotal * (p.discount || 0) / 100)).toFixed(2)
-      };
-    });
-
-    const totalAmount = (subtotal + totalSGST + totalCGST - order.totalDiscount).toFixed(2);
-
-    // Prepare the data for the template
+    // Initialize the orderData object
     const orderData = {
       orderNumber: order._id,
       customerName: order.user.name,
       shippingAddress: order.shippingAddress,
-      subtotal: subtotal.toFixed(2),
-      sgst: totalSGST.toFixed(2),
-      cgst: totalCGST.toFixed(2),
-      discount: order.totalDiscount.toFixed(2),
-      totalAmount,
+      subtotal: 0,
+      discount: order.totalDiscount?.toFixed(2) || "0.00",
+      totalSGST: 0,
+      totalCGST: 0,
+      totalAmount: 0,
       status: order.status,
       orderDate: new Date(order.orderDate).toLocaleString(),
-      products
+      products: []
     };
+
+    // Calculate totals and populate products array
+    order.products.forEach(p => {
+      const productTotal = p.price * p.quantity;
+      const discountAmount = (productTotal * (p.discount || 0)) / 100;
+      const discountedPrice = productTotal - discountAmount;
+
+      const productSGST = (discountedPrice * p.sgst) / 100;
+      const productCGST = (discountedPrice * p.cgst) / 100;
+
+      // Update the orderData with calculations
+      orderData.subtotal += productTotal;
+      orderData.totalSGST += productSGST;
+      orderData.totalCGST += productCGST;
+      orderData.totalAmount += discountedPrice + productSGST + productCGST;
+
+      orderData.products.push({
+        name: p.name,
+        quantity: p.quantity,
+        price: p.price.toFixed(2),
+        discount: discountAmount.toFixed(2),
+        sgst: productSGST.toFixed(2),
+        cgst: productCGST.toFixed(2),
+        total: (discountedPrice + productSGST + productCGST).toFixed(2),
+      });
+    });
+
+    // Convert the totals to fixed decimal format
+    orderData.subtotal = orderData.subtotal.toFixed(2);
+    orderData.totalSGST = orderData.totalSGST.toFixed(2);
+    orderData.totalCGST = orderData.totalCGST.toFixed(2);
+    orderData.totalAmount = orderData.totalAmount.toFixed(2);
 
     // Replace placeholders with actual data
     let htmlContent = htmlTemplate
@@ -178,14 +181,14 @@ async function generateInvoicePdf(req, res) {
       .replace(/{{shippingAddress\.country}}/g, orderData.shippingAddress.country)
       .replace(/{{shippingAddress\.postalCode}}/g, orderData.shippingAddress.postalCode)
       .replace(/{{subtotal}}/g, orderData.subtotal)
-      .replace(/{{sgst}}/g, orderData.sgst)
-      .replace(/{{cgst}}/g, orderData.cgst)
+      .replace(/{{sgst}}/g, orderData.totalSGST)
+      .replace(/{{cgst}}/g, orderData.totalCGST)
       .replace(/{{discount}}/g, orderData.discount)
       .replace(/{{totalAmount}}/g, orderData.totalAmount);
 
     // Handle products table
     let productsHtml = '';
-    for (const product of orderData.products) {
+    orderData.products.forEach(product => {
       productsHtml += `
         <tr>
           <td>${product.name}</td>
@@ -197,7 +200,7 @@ async function generateInvoicePdf(req, res) {
           <td>₹${product.total}</td>
         </tr>
       `;
-    }
+    });
 
     // Replace the placeholder with the products HTML
     htmlContent = htmlContent.replace('{{productsTable}}', productsHtml);
@@ -226,6 +229,9 @@ async function generateInvoicePdf(req, res) {
     res.status(500).json({ message: 'Failed to generate PDF', error: error.message });
   }
 }
+
+
+
 
 module.exports = {
   generateInvoicePdf,
