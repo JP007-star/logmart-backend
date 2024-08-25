@@ -43,41 +43,50 @@ exports.signup = async (req, res, next) => {
 
 exports.signin = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email }).exec();
+      // Retrieve user by email
+      const user = await User.findOne({ email: req.body.email });
 
-    if (
-      !user ||
-      !user.authenticate(req.body.password) 
-    ) {
-      return res.status(400).json({
-        message: "Invalid credentials || Something went wrong",
+      // Check if user exists
+      if (!user) {
+          return res.status(400).json({ message: 'User not found' });
+      }
+
+      // Log the hashed password
+
+      // Authenticate password
+      if (!(await user.authenticate(req.body.password))) {
+          return res.status(400).json({ error: 'Invalid credentials' });
+      }
+
+      console.log('Hashed Password:', user.password);
+
+
+      // Generate JWT token
+      const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      // Extract user details
+      const { _id, firstName, lastName, email, role, fullName } = user;
+
+      // Set cookie with token
+      res.cookie('token', token, { maxAge: 3600000, httpOnly: true }); // 1 hour in milliseconds
+
+      // Return response with user data and token
+      return res.status(200).json({
+          token,
+          user: {
+              _id,
+              firstName,
+              lastName,
+              email,
+              role,
+              fullName
+          }
       });
-    }
-
-    const token = jwt.sign(
-      { _id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    const { _id, firstName, lastName, email, role, fullName, profilePicture } =
-      user;
-
-    return res.status(200).json({
-      token,
-      user: {
-        _id,
-        firstName,
-        lastName,
-        email,
-        role,
-        fullName,
-        profilePicture,
-      },
-    });
   } catch (error) {
-    return res.status(400).json({
-      message: error.message,
-    });
+      // Handle errors
+      return res.status(400).json({
+          error: error.message
+      });
   }
 };
 

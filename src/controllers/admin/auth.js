@@ -40,18 +40,32 @@ exports.signup = async (req, res, next) => {
 
 exports.signin = async (req, res) => {
     try {
+        // Retrieve user by email
         const user = await User.findOne({ email: req.body.email });
 
-        if (!user || !(await user.authenticate(req.body.password))) {
+        // Check if user exists
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        // Log the hashed password
+        console.log('Hashed Password:', user.password);
+
+        // Authenticate password
+        if (!(await user.authenticate(req.body.password))) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        // Generate JWT token
         const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
+        // Extract user details
         const { _id, firstName, lastName, email, role, fullName } = user;
 
-        res.cookie('token', token, { expiresIn: '1m' });
+        // Set cookie with token
+        res.cookie('token', token, { maxAge: 3600000, httpOnly: true }); // 1 hour in milliseconds
 
+        // Return response with user data and token
         return res.status(200).json({
             token,
             user: {
@@ -64,6 +78,7 @@ exports.signin = async (req, res) => {
             }
         });
     } catch (error) {
+        // Handle errors
         return res.status(400).json({
             error: error.message
         });
